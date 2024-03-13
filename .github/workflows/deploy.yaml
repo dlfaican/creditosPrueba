@@ -12,18 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install Azure CLI
+        uses: azure/cli@v1
+        with:
+          azure-version: 'latest'
+
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          client_id: ${{ secrets.b6403821-d790-483e-b2c4-0768b83d73d5 }}
+          client_id: ${{ secrets.AZURE_CLIENT_ID }}
           client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-          tenant_id: ${{ secrets.aaf01420-8f32-49e5-bcef-795340c1f96a }}
+          tenant_id: ${{ secrets.AZURE_TENANT_ID }}
 
-      - name: Get AKS credentials
-        uses: azure/aks-get-credentials@v1
-        with:
-          resource_group: ${{ secrets.Banquito-Prod }}
-          cluster_name: ${{ secrets.Banquito-Prod-AKS }}
+      - name: Get AKS Credentials (using Azure CLI)
+        run: |
+          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} -t ${{ secrets.AZURE_TENANT_ID }}
+          az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.AZURE_CLUSTER_NAME }}
 
       - name: Deploy to AKS
         run: kubectl apply -f ./kubernetes/manifest.yaml
